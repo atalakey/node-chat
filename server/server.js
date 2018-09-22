@@ -4,6 +4,8 @@ const http = require('http');
 const express = require('express');
 const socketIO = require('socket.io');
 
+const { generateMessage } = require('./utils/message');
+
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
@@ -16,26 +18,15 @@ io.on('connection', (socket) => {
   console.log('New user connected');
 
   // Emit an event to a single connection
-  socket.emit('newMessage', {
-    from: 'Admin',
-    text: 'Welcome to the chat app',
-    createdAt: new Date().getTime()
-  });
+  socket.emit('newMessage', generateMessage('Admin', 'Welcome to the chat app'));
 
   // Emit an event to all connections but this socket
-  socket.broadcast.emit('newMessage', {
-    from: 'Admin',
-    text: 'New user joined',
-    createdAt: new Date().getTime()
-  });
+  socket.broadcast.emit('newMessage', generateMessage('Admin', 'New user joined'));
 
   socket.on('createMessage', (message) => {
     console.log('createMessage', message);
     // Emit an event to every single connection
-    io.emit('newMessage', {
-      ...message,
-      createdAt: new Date().getTime()
-    });
+    io.emit('newMessage', generateMessage(message.from, message.text));
   });
 
   socket.on('disconnect', () => {
